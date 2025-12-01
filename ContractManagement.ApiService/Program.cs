@@ -29,8 +29,6 @@ builder.Services.AddAuthentication("Bearer")
 
 builder.Services.AddAuthorization();
 
-// Add service defaults & Aspire client integrations.
-builder.AddServiceDefaults();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -54,8 +52,6 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 app.UseExceptionHandler();
 
-
-app.MapDefaultEndpoints();
 
 app.UseAuthentication();
 app.UseAuthorization();

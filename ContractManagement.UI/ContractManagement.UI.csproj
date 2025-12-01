@@ -18,7 +18,6 @@
   <ItemGroup>
     <ProjectReference Include="..\ContractManagement.ApiService\ContractManagement.ApiServer.csproj" />
     <ProjectReference Include="..\ContractManagement.Model\ContractManagement.Model.csproj" />
-    <ProjectReference Include="..\ContractManagement.ServiceDefaults\ContractManagement.ServiceDefaults.csproj" />
   </ItemGroup>
 
 </Project>
