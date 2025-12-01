@@ -1,0 +1,51 @@
+﻿@page "/"
+@inherits ContractManagement.UI.ProtectedPageBase
+@inject AuthService AuthState
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+@if (FirstName == null)
+{
+    <MudSkeleton Height="50px" Animation="Animation.Wave" />
+    <MudSkeleton Height="50px" Animation="Animation.Wave" />
+    <MudSkeleton Height="50px" Animation="Animation.Wave" />
+}
+else
+{
+    <h1>Welcome back, @FirstName</h1>
+}
+
+@code {
+    private bool _firstRenderDone = false;
+
+    private string FirstName;
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_firstRenderDone)
+        {
+            _firstRenderDone = true;
+
+            var tokenString = await AuthState.GetTokenAsync();
+            if (string.IsNullOrEmpty(tokenString))
+            {
+                Nav.NavigateTo("/login", forceLoad: true);
+                return;
+            }
+
+            var handler = new JwtSecurityTokenHandler();
+            var jwtToken = handler.ReadJwtToken(tokenString);
+            FirstName = jwtToken.Claims
+                .FirstOrDefault(c => c.Type == ClaimTypes.Name)
+                ?.Value;
+
+            // Now the page can load normally
+                StateHasChanged();
+
+            }
+    }
+    public class User
+    {
+        public string FirstName { get; set; } = "";
+        public string LastName { get; set; } = "";
+    }
+}

@@ -1,0 +1,25 @@
+﻿@page "/logOut"
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+@inject ContractManagement.UI.Services.AuthService AuthState
+@rendermode InteractiveServer
+
+
+@code {
+    private bool _executed;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_executed)
+        {
+            _executed = true;
+
+            // Remove JWT from localStorage
+            await AuthState.ClearTokenAsync();
+
+            // Redirect to login
+            Nav.NavigateTo("/", forceLoad: true);
+        }
+    }
+
+}

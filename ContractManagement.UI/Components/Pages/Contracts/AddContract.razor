@@ -1,0 +1,152 @@
+﻿@page "/AddContract"
+@inherits ContractManagement.UI.ProtectedPageBase
+@inject HttpClient Http
+@inject NavigationManager Nav
+@inject ContractManagement.UI.Services.AuthService AuthService
+@rendermode InteractiveServer
+<h3>Add Contract</h3>
+
+@if (users == null)
+{
+      <div style="max-width: 400px;">
+        <MudSkeleton Variant="Variant.Text" Animation="Animation.Wave" Width="60%" Height="30px" Style="margin-bottom: 20px;" />
+        <MudSkeleton Variant="Variant.Rect" Animation="Animation.Wave" Width="100%" Height="40px" Style="border-radius: 6px; margin-bottom: 15px;" />
+        <MudSkeleton Variant="Variant.Rect" Animation="Animation.Wave" Width="100%" Height="40px" Style="border-radius: 6px; margin-bottom: 15px;" />
+        <MudSkeleton Variant="Variant.Rect" Animation="Animation.Wave" Width="100%" Height="80px" Style="border-radius: 6px; margin-bottom: 15px;" />
+        <MudSkeleton Variant="Variant.Rect" Animation="Animation.Wave" Width="40%" Height="40px" Style="border-radius: 6px;" />
+    </div>
+}
+else
+{
+    <EditForm Model="@contract" OnValidSubmit="AddContractAsync">
+        <div class="container mt-4">
+            <DataAnnotationsValidator />
+            <!-- User Selection -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="employee" class="form-label">User</label>
+                    <select id="employee" class="form-select" @bind="contract.UserId" required>
+                        <option value="">-- Select User --</option>
+                        @foreach (var u in users)
+                        {
+                            <option value="@u.Id">@u.FirstName @u.LastName</option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <!-- Position / Role -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="position" class="form-label">Position / Role</label>
+                    <input id="position" type="text" class="form-control" @bind="contract.Position" required />
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="row mb-3">
+                <div class="col-md-8">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea id="description" class="form-control" @bind="contract.Description" rows="4"></textarea>
+                </div>
+            </div>
+
+            <!-- Start and End Dates -->
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <label for="startDate" class="form-label">Start Date</label>
+                    <input id="startDate" type="date" class="form-control" @bind="contract.StartDate" required />
+                </div>
+                <div class="col-md-3">
+                    <label for="endDate" class="form-label">End Date</label>
+                    <input id="endDate" type="date" class="form-control" @bind="contract.EndDate" min="@contract.StartDate.ToString("yyyy-MM-dd")" required />
+                </div>
+            </div>
+
+            <!-- Wage -->
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <label for="wage" class="form-label">Wage</label>
+                    <div class="input-group">
+                        <input id="wage" type="number" class="form-control" @bind="contract.Wage" min="100" step="100" required />
+                        <span class="input-group-text">USD</span>
+                    </div>
+                    <ValidationMessage For="@(()=>contract.Wage)" />
+                </div>
+            </div>
+
+
+            <!-- Submit Button -->
+            <div class="row">
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary w-100">Add Contract</button>
+                </div>
+            </div>
+
+        </div>
+    </EditForm>
+
+}
+
+@code {
+    private Contracts contract = new Contracts
+    {
+        StartDate = DateTime.Today,
+        EndDate = DateTime.Today
+    };
+    private List<Users> users;
+    private int companyId;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        var id = await AuthService.GetAdminIdFromJwtAsync();
+        var jwt = await AuthService.GetTokenAsync();
+        // Add Authorization header
+        Http.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwt);
+
+        // Get user's company
+        var companies = await Http.GetFromJsonAsync<List<Companies>>($"api/companies/admin/{id}");
+        if (companies == null || companies.Count == 0)
+        {
+            Nav.NavigateTo("/myCompany");
+            return;
+        }
+
+        companyId = companies[0].Id;
+
+        // Load users in this company
+        users = await Http.GetFromJsonAsync<List<Users>>("/api/Users") ?? new List<Users>();
+        StateHasChanged();
+    }
+
+    private async Task AddContractAsync()
+    {
+        // Assign the companyId to the contract
+        contract.CompanyId = companyId;
+        var jwt = await AuthService.GetTokenAsync();
+        if (string.IsNullOrEmpty(jwt))
+        {
+            Nav.NavigateTo("/", forceLoad: true);
+            return;
+        }
+
+        // Add Authorization header
+        Http.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwt);
+
+        // POST to RESTful endpoint
+
+        var response = await Http.PostAsJsonAsync($"/api/contracts", contract);
+
+        if (response.IsSuccessStatusCode)
+        {
+            Nav.NavigateTo("/MyCompany"); // Redirect after success
+        }
+        else
+        {
+            Console.WriteLine("Failed to add contract");
+        }
+    }
+}

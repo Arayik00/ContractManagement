@@ -1,0 +1,14 @@
+﻿ <Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ContractManagement.Database\ContractManagement.Database.csproj" />
+    <ProjectReference Include="..\ContractManagement.Model\ContractManagement.Model.csproj" />
+  </ItemGroup>
+
+</Project>

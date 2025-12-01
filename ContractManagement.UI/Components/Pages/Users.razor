@@ -1,0 +1,48 @@
+﻿@page "/users"
+@inherits ProtectedPageBase
+@inject HttpClient Http
+@rendermode InteractiveServer
+
+<h3>Users List (Protected)</h3>
+
+@if (users == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <ul>
+        @foreach (var u in users)
+        {
+            <li>@u.Username (@u.FirstName @u.LastName)</li>
+        }
+    </ul>
+}
+
+@code {
+    private List<User> users;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        if (!firstRender) return;
+
+        try
+        {
+            users = await Http.GetFromJsonAsync<List<User>>("/api/Users");
+            StateHasChanged();
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            Nav.NavigateTo("/login", forceLoad: true);
+        }
+    }
+
+    public class User
+    {
+        public string Username { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+    }
+}

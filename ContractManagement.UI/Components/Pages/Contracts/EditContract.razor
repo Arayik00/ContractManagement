@@ -1,0 +1,138 @@
+﻿@page "/editcontract/{contractId:int}"
+@inherits ContractManagement.UI.ProtectedPageBase
+@inject HttpClient Http
+@inject NavigationManager Nav
+@inject ContractManagement.UI.Services.AuthService AuthService
+@rendermode InteractiveServer
+@if (contract == null)
+{
+    <p>@message</p>
+}
+else
+{
+    <EditForm Model="@contract" OnValidSubmit="UpdateContractAsync">
+        <!-- Position / Role -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="position" class="form-label">Position / Role</label>
+                <input id="position" type="text" class="form-control" @bind="contract.Position" @bind:event="oninput" required />
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="row mb-3">
+                <div class="col-md-8">
+                    <label for="description" class="form-label">Description</label>
+                <textarea id="description" class="form-control" @bind="contract.Description" rows="4" @bind:event="oninput"></textarea>
+                </div>
+            </div>
+
+            <!-- Start and End Dates -->
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <label for="startDate" class="form-label">Start Date</label>
+                <input id="startDate" type="date" class="form-control" @bind="contract.StartDate" @bind:event="oninput" required />
+                </div>
+                <div class="col-md-3">
+                    <label for="endDate" class="form-label">End Date</label>
+                <input id="endDate" type="date" class="form-control" @bind="contract.EndDate" min="@contract.StartDate.ToString("yyyy-MM-dd")" @bind:event="oninput" required />
+                </div>
+            </div>
+
+            <!-- Wage -->
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <label for="wage" class="form-label">Wage</label>
+                    <div class="input-group">
+                    <input id="wage" type="number" class="form-control" @bind="contract.Wage" min="100" step="100" @bind:event="oninput" required />
+                        <span class="input-group-text">USD</span>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Submit Button -->
+            <div class="row">
+                <div class="col-md-3">
+                <button type="submit" disabled="@((contract.Position == oldVersion.Position
+                                                  && contract.Description == oldVersion.Description
+                                                  && contract.StartDate == oldVersion.StartDate
+                                                  && contract.EndDate == oldVersion.EndDate
+                                                  && contract.Wage == oldVersion.Wage))" class="btn btn-primary w-100">Update Contract
+                </button>
+                </div>
+            </div>
+    </EditForm>
+}
+@code {
+    [Parameter]
+    public int ContractId { get; set; }
+    private string message = "Loading contract...";
+    private ContractManagement.Model.Models.Contracts contract;
+    private ContractManagement.Model.Models.Contracts oldVersion;
+    private bool firstRender = true;
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        firstRender = false;
+        var jwt = await AuthService.GetTokenAsync();
+        if (string.IsNullOrEmpty(jwt))
+        {
+            Nav.NavigateTo("/", forceLoad: true);
+            return;
+        }
+
+        // Add Authorization header
+        Http.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwt);
+
+        // POST to RESTful endpoint
+        var response = await Http.GetAsync($"/api/contracts/{ContractId}");
+        if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+        {
+            message = "Access denied";
+        }
+        else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            Nav.NavigateTo("/login", true);
+        }
+        else if (response.IsSuccessStatusCode)
+        {
+            contract = await response.Content.ReadFromJsonAsync<ContractManagement.Model.Models.Contracts>();
+            oldVersion = new ContractManagement.Model.Models.Contracts
+            {
+                Position = contract.Position,
+                Description = contract.Description,
+                StartDate = contract.StartDate,
+                EndDate = contract.EndDate,
+                Wage = contract.Wage
+            };
+        }
+        StateHasChanged();
+    }
+    protected async Task UpdateContractAsync()
+    {
+        var jwt = await AuthService.GetTokenAsync();
+        if (string.IsNullOrEmpty(jwt))
+        {
+            Nav.NavigateTo("/", forceLoad: true);
+            return;
+        }
+
+        // Add Authorization header
+        Http.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwt);
+
+        // POST to RESTful endpoint
+        var status = await Http.PatchAsJsonAsync<ContractManagement.Model.Models.Contracts>($"/api/contracts/{ContractId}", contract);
+        if (status.IsSuccessStatusCode)
+        {
+            Nav.NavigateTo("/myCompany");
+        }
+        else
+        {
+            Console.WriteLine("error");
+            // some message
+        }
+    }
+}

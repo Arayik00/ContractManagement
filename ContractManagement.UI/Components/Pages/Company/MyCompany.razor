@@ -1,0 +1,205 @@
+﻿@page "/MyCompany"
+@inherits ContractManagement.UI.ProtectedPageBase
+@inject HttpClient Http
+@inject NavigationManager Nav
+@inject ContractManagement.UI.Services.AuthService ClientJwtService
+
+
+@rendermode InteractiveServer
+
+@if (company == null)
+{
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="height: 80px;">
+                <th style="padding: 15px;">
+                    <MudSkeleton Variant="Variant.Rect" Animation="Animation.Wave" Width="100%" Height="100%" Style="min-height: 60px; border-radius: 8px;" />
+                </th>
+                <th style="padding: 15px;">
+                    <MudSkeleton Variant="Variant.Rect" Animation="Animation.Wave" Width="100%" Height="100%" Style="min-height: 60px; border-radius: 8px;" />
+                </th>
+                <th style="padding: 15px;">
+                    <MudSkeleton Variant="Variant.Rect" Animation="Animation.Wave" Width="100%" Height="100%" Style="min-height: 60px; border-radius: 8px;" />
+                </th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @for (int i = 0; i < 5; i++)
+            {
+                <tr style="height: 70px;">
+                    <td style="padding: 15px;">
+                        <MudSkeleton Variant="Variant.Rect" Animation="Animation.Wave" Width="100%" Height="100%" Style="min-height: 50px; border-radius: 8px;" />
+                    </td>
+                    <td style="padding: 15px;">
+                        <MudSkeleton Variant="Variant.Rect" Animation="Animation.Wave" Width="100%" Height="100%" Style="min-height: 50px; border-radius: 8px;" />
+                    </td>
+                    <td style="padding: 15px;">
+                        <MudSkeleton Variant="Variant.Rect" Animation="Animation.Wave" Width="100%" Height="100%" Style="min-height: 50px; border-radius: 8px;" />
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+
+
+
+}
+else if(company!=null && company.CompanyName!="") {
+    <div>
+            <h3>@company.CompanyName</h3>
+
+            <div class="d-flex mb-3">
+                <MudTextField @bind-Value="searchString"
+                              Placeholder="Search..."
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              Variant="Variant.Outlined" />
+
+                <select @bind="selectedStatus" class="form-select w-auto">
+                    @foreach (var status in statuses)
+                    {
+                        <option value="@status">@status</option>
+                    }
+                </select>
+            </div>
+
+            <MudTable Items="@FilteredContracts" Style="cursor:default" Hover="true" Class="mud-table-bordered">
+                <HeaderContent>
+                    <MudTh>Name</MudTh>
+                    <MudTh>Position</MudTh>
+                    <MudTh>Description</MudTh>
+                    <MudTh>Start Date</MudTh>
+                    <MudTh>End Date</MudTh>
+                    <MudTh>Wage</MudTh>
+                    <MudTh>Actions</MudTh>
+                </HeaderContent>
+
+                <RowTemplate>
+                    <MudTd>@context.firstName @context.lastName</MudTd>
+                    <MudTd>@context.contract.Position</MudTd>
+                    <MudTd>@context.contract.Description</MudTd>
+                    <MudTd>@context.contract.StartDate.ToShortDateString()</MudTd>
+                    <MudTd>@context.contract.EndDate.ToShortDateString()</MudTd>
+                    <MudTd>@context.contract.Wage.ToString("F2")</MudTd>
+                    <MudTd>
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary"
+                                       OnClick="@(() => EditContract(context.contract.Id))" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
+                                       OnClick="@(() => DeleteContract(context.contract.Id))" />
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+    </div>
+}
+else
+{
+    <p>You don't seem to have a company yet.</p>
+    <p>Click the <MudLink Href="/registerCompany" Color="Color.Primary" Underline="Underline.Always">link</MudLink> to create your first company.</p>
+}
+
+@code {
+    // --- State ---
+    private Companies company;
+    private List<ContractNames> companyContracts = new();
+    private string searchString = "";
+    private string selectedStatus = "All";
+    private readonly string[] statuses = new[] { "All", "Active", "Finished", "NotStartedYet" };
+    private bool firstRender = true;
+    private int? adminId;
+
+
+    // --- Computed Property for Filtering ---
+    private IEnumerable<ContractNames> FilteredContracts =>
+        companyContracts.Where(c =>
+            (string.IsNullOrWhiteSpace(searchString) ||
+             c.contract.Position.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
+             c.firstName.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
+             c.lastName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            &&
+            (selectedStatus == "All" ||
+             (selectedStatus == "Active" && c.contract.StartDate <= DateTime.Today && c.contract.EndDate >= DateTime.Today) ||
+             (selectedStatus == "Finished" && c.contract.EndDate < DateTime.Today) ||
+             (selectedStatus == "NotStartedYet" && c.contract.StartDate > DateTime.Today))
+        );
+
+    // --- Lifecycle ---
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        this.firstRender = false;
+
+        var jwt = await ClientJwtService.GetTokenAsync();
+        if (string.IsNullOrEmpty(jwt))
+        {
+            Nav.NavigateTo("/login", true);
+            return;
+        }
+
+        await LoadCompanies();
+    }
+
+    // --- Data Loading ---
+    private async Task LoadCompanies()
+    {
+        var id = await ClientJwtService.GetAdminIdFromJwtAsync();
+        if (!id.HasValue)
+            return;
+
+        adminId = id;
+
+        // Add Authorization header
+        var jwt = await ClientJwtService.GetTokenAsync();
+        Http.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwt);
+
+        // Call API
+        var companies = await Http.GetFromJsonAsync<List<Companies>>($"/api/companies/admin/{adminId}");
+        if (companies.Count > 0)
+        {
+            company = companies.FirstOrDefault();
+            var contracts = await Http.GetFromJsonAsync<List<ContractNames>>($"/api/contracts/company/{company.Id}");
+            if (contracts != null)
+                companyContracts = contracts;
+        }
+        else
+        {
+            company = new();
+            company.CompanyName = "";
+        }
+        StateHasChanged();
+
+    }
+
+
+    // --- Actions ---
+    private async Task DeleteContract(int contractId)
+    {
+        var jwt = await ClientJwtService.GetTokenAsync();
+        if (string.IsNullOrEmpty(jwt))
+        {
+            Nav.NavigateTo("/login", true);
+            return;
+        }
+
+        Http.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwt);
+
+        var response = await Http.DeleteAsync($"/api/contracts/{contractId}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            await LoadCompanies();
+        }
+        else
+        {
+            Console.WriteLine("Failed to delete contract");
+        }
+    }
+
+    private void EditContract(int id)
+    {
+        Nav.NavigateTo($"/editcontract/{id}");
+    }
+}

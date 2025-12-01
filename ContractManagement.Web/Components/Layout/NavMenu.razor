@@ -1,0 +1,32 @@
+﻿<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">ContractManagement</a>
+    </div>
+</div>
+
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+
+<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+    <nav class="flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="myCompany">
+                <span class="bi-newspaper ms-2" aria-hidden="true"></span>
+                <span class="d-inline-block ms-2">My Company</span>
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="myContracts">
+                <span class="bi-building ms-2" aria-hidden="true"></span>
+                <span class="d-inline-block ms-2"> My Contracts</span>
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="addContract">
+                <span class="bi-plus-lg ms-2" aria-hidden="true"></span>
+                <span class="d-inline-block ms-2"> New Contract</span>
+            </NavLink>
+        </div>
+    </nav>
+</div>
+

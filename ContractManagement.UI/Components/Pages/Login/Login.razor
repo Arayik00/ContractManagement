@@ -1,0 +1,151 @@
+﻿@page "/login"
+@inject AuthService AuthState
+@inject NavigationManager Nav
+@inject HttpClient Http
+@inject IJSRuntime JS
+@layout ContractManagement.UI.Components.Layout.LoginLayout
+@rendermode InteractiveServer
+
+<div class="title-text">
+    <div class="title login">Login Form</div>
+    <div class="title signup">Signup Form</div>
+</div>
+<div class="form-container">
+    <div class="slide-controls">
+        <input type="radio" name="slide" id="login" checked>
+        <input type="radio" name="slide" id="signup">
+        <label for="login" class="slide login">Login</label>
+        <label for="signup" class="slide signup">Signup</label>
+        <div class="slider-tab"></div>
+    </div>
+    <div class="form-inner">
+
+        <!-- LOGIN FORM -->
+        <EditForm Model="@loginModel" OnValidSubmit="LogInAsync" class="login">
+            <div class="login">
+                <div class="field">
+                    <input @bind-value="loginModel.Username" @bind-value:event="oninput" type="text" placeholder="Username" required>
+                </div>
+                <div class="field">
+                    <input @bind-value="loginModel.Password" @bind-value:event="oninput" type="password" placeholder="Password" required>
+                </div>
+                <div class="field">
+                    <button class="btn btn-primary" type="submit">Login</button>
+                </div>
+                <div class="signup-link">Not a member? <a href="#">Signup now</a></div>
+            </div>
+        </EditForm>
+
+        <!-- REGISTER FORM -->
+        <EditForm Model="@signupModel" OnValidSubmit="RegisterUser" class="signup">
+            <div class="field">
+                <input @bind-value="signupModel.Username" @bind-value:event="oninput" type="text" placeholder="Username" required>
+                @if (!string.IsNullOrEmpty(usernameError))
+                {
+                    <div class="small text-danger">@usernameError</div>
+                }
+            </div>
+            <div class="field">
+                <input @bind-value="signupModel.Password" @bind-value:event="oninput" type="password" placeholder="Password" required>
+            </div>
+            <div class="field">
+                <input @bind-value="signupModel.FirstName" @bind-value:event="oninput" type="text" placeholder="First Name" required>
+            </div>
+            <div class="field">
+                <input @bind-value="signupModel.LastName" @bind-value:event="oninput" type="text" placeholder="Last Name" required>
+            </div>
+            <div class="field">
+                <button class="btn btn-primary" type="submit">Register</button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private LoginModel loginModel = new();
+    private SignUpModel signupModel = new();
+    private string? usernameError;
+    private bool _firstRenderDone = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_firstRenderDone)
+        {
+            _firstRenderDone = true;
+            await JS.InvokeVoidAsync("eval", @"
+                const loginText = document.querySelector('.title-text .login');
+                const loginForm = document.querySelector('form.login');
+                const loginBtn = document.querySelector('label.login');
+                const signupBtn = document.querySelector('label.signup');
+                const signupLink = document.querySelector('form .signup-link a');
+
+                signupBtn.onclick = () => {
+                    loginForm.style.marginLeft = '-50%';
+                    loginText.style.marginLeft = '-50%';
+                };
+
+                loginBtn.onclick = () => {
+                    loginForm.style.marginLeft = '0%';
+                    loginText.style.marginLeft = '0%';
+                };
+
+                signupLink.onclick = () => {
+                    signupBtn.click();
+                    return false;
+                };
+            ");
+        var token = await AuthState.GetTokenAsync();
+        if (!string.IsNullOrEmpty(token))
+            Nav.NavigateTo("/", true);
+        }
+    }
+
+    private async Task LogInAsync()
+    {
+        var response = await Http.PostAsJsonAsync("/api/auth/login", loginModel);
+        if (!response.IsSuccessStatusCode)
+        {
+            Console.WriteLine("Login failed");
+            return;
+        }
+
+        var data = await response.Content.ReadFromJsonAsync<LoginResponse>();
+
+        await AuthState.SetTokenAsync(data.token);
+
+        Nav.NavigateTo("/", true);
+    }
+
+    private async Task RegisterUser()
+    {
+        var response = await Http.PostAsJsonAsync("/api/users/register", signupModel);
+        if (response.IsSuccessStatusCode)
+        {
+            Nav.NavigateTo("/login", true);
+        }
+        else
+        {
+            usernameError = "Username already exists";
+        }
+    }
+
+    // Models
+    public class LoginModel
+    {
+        public string Username { get; set; } = "";
+        public string Password { get; set; } = "";
+    }
+
+    public class SignUpModel
+    {
+        public string Username { get; set; } = "";
+        public string Password { get; set; } = "";
+        public string FirstName { get; set; } = "";
+        public string LastName { get; set; } = "";
+    }
+
+    public class LoginResponse
+    {
+        public string token { get; set; } = "";
+    }
+}
