@@ -20,6 +20,7 @@ else
         <MudBlazor.MudTh>Description</MudBlazor.MudTh>
         <MudBlazor.MudTh>Start Date</MudBlazor.MudTh>
         <MudBlazor.MudTh>End Date</MudBlazor.MudTh>
+        <MudBlazor.MudTh>Edit</MudBlazor.MudTh>
         <MudBlazor.MudTh>Wage</MudBlazor.MudTh>
 
     </HeaderContent>
@@ -30,6 +31,10 @@ else
         <MudBlazor.MudTd>@context.Description</MudBlazor.MudTd>
         <MudBlazor.MudTd>@context.StartDate</MudBlazor.MudTd>
         <MudBlazor.MudTd>@context.EndDate</MudBlazor.MudTd>
+            <MudBlazor.MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary"
+                               OnClick="@(() => EditContract(context.Id))" />
+            </MudBlazor.MudTd>
         <MudBlazor.MudTd>@context.Wage.ToString("F2")</MudBlazor.MudTd>
     </RowTemplate>
 </MudBlazor.MudTable>
@@ -65,5 +70,9 @@ else
 
         myContracts = contracts;
         StateHasChanged();
+    }
+    private void EditContract(int id)
+    {
+        Nav.NavigateTo($"/editcontract/{id}");
     }
 }
