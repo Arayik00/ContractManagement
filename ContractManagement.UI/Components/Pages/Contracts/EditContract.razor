@@ -11,75 +11,97 @@
 }
 else
 {
-    <EditForm Model="@contract" OnValidSubmit="UpdateContractAsync">
-        <div class="row mb-3">
-            <div class="col-md-8">
-                <label for="description" class="form-label">First Name</label>
-                <input id="description" class="form-control" @bind="contract.contract.User.FirstName" rows="4" @bind:event="oninput"></input>
-            </div>
-        </div>
-        <div class="row mb-3">
-            <div class="col-md-8">
-                <label for="description" class="form-label">Last Name</label>
-                <input id="description" class="form-control" @bind="contract.contract.User.LastName" rows="4" @bind:event="oninput"></input>
-            </div>
-        </div>
-        <!-- Position / Role -->
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label for="position" class="form-label">Position / Role</label>
-                <input id="position" type="text" class="form-control" @bind="contract.contract.Position" @bind:event="oninput" required />
-                </div>
-            </div>
+
+    <MudForm Model="@contract">
+        <MudGrid>
+
+            <!-- User Info -->
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="First Name"
+                              @bind-Value="contract.contract.User.FirstName"
+                              Immediate="true"
+                              Required="true" />
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Last Name"
+                              @bind-Value="contract.contract.User.LastName"
+                              Immediate="true"
+                              Required="true" />
+            </MudItem>
+
+            <!-- Position / Role -->
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Position / Role"
+                              @bind-Value="contract.contract.Position"
+                              Immediate="true"
+                              Required="true" />
+            </MudItem>
 
             <!-- Description -->
-            <div class="row mb-3">
-                <div class="col-md-8">
-                    <label for="description" class="form-label">Description</label>
-                <textarea id="description" class="form-control" @bind="contract.contract.Description" rows="4" @bind:event="oninput"></textarea>
-                </div>
-            </div>
+            <MudItem xs="12">
+                <MudTextField T="string"
+                              Label="Description"
+                              Lines="4"
+                              TextArea="true"
+                              @bind-Value="contract.contract.Description"
+                              Immediate="true"
+                              Required="true" />
+            </MudItem>
 
-            <!-- Start and End Dates -->
-            <div class="row mb-3">
-                <div class="col-md-3">
-                    <label for="startDate" class="form-label">Start Date</label>
-                <input id="startDate" type="date" class="form-control" @bind="contract.contract.StartDate" @bind:event="oninput" readonly="@(!contract.hasAdminAccess)" required />
-                </div>
-                <div class="col-md-3">
-                    <label for="endDate" class="form-label">End Date</label>
-                <input id="endDate" type="date" class="form-control" @bind="contract.contract.EndDate" min="@contract.contract.StartDate.ToString("yyyy-MM-dd")" readonly="@(!contract.hasAdminAccess)" @bind:event="oninput" required />
-                </div>
-            </div>
+            <!-- Dates -->
+            <MudItem xs="12" md="6">
+                <MudDatePicker Label="Start Date"
+                               PickerVariant="PickerVariant.Dialog"
+                               Disabled="!contract.hasAdminAccess"
+                               @bind-Date="contract.contract.StartDate"
+                               Required="true"
+                               DateFormat="yyyy-MM-dd" />
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudDatePicker 
+                               Label="End Date"
+                               PickerVariant="PickerVariant.Dialog"
+                               Disabled="!contract.hasAdminAccess"
+                               @bind-Date="contract.contract.EndDate"
+                               MinDate="contract.contract.StartDate"
+                               Required="true"
+                               DateFormat="yyyy-MM-dd" />
+            </MudItem>
 
             <!-- Wage -->
-            <div class="row mb-3">
-                <div class="col-md-3">
-                    <label for="wage" class="form-label">Wage</label>
-                    <div class="input-group">
-                    <input id="wage" type="number" class="form-control" @bind="contract.contract.Wage" min="100" step="100" @bind:event="oninput" readonly="@(!contract.hasAdminAccess)" required />
-                        <span class="input-group-text">USD</span>
-                    </div>
-                </div>
-            </div>
+            <MudItem xs="12" md="2">
+                <MudNumericField T="decimal"
+                                 Label="Wage (USD)"
+                                 @bind-Value="contract.contract.Wage"
+                                 Min="100"
+                                 Step="100"
+                                 Disabled="!contract.hasAdminAccess"
+                                 Immediate="true"
+                                 Required="true" />
+            </MudItem>
+        </MudGrid>
+        <MudButton OnClick="UpdateContractAsync"
+            Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   FullWidth="true"
+                   Disabled="@((contract.contract.Position == oldVersion.contract.Position
+                                                                                  && contract.contract.Description == oldVersion.contract.Description
+                                                                                  && contract.contract.StartDate == oldVersion.contract.StartDate
+                                                                                  && contract.contract.EndDate == oldVersion.contract.EndDate
+                                                                                  && contract.contract.Wage == oldVersion.contract.Wage
+                                                                                  && contract.contract.User.FirstName == oldVersion.contract.User.FirstName
+                                                                                  && contract.contract.User.LastName == oldVersion.contract.User.LastName))"
+               ButtonType="ButtonType.Submit">
+        Update Contract
+    </MudButton>
+    </MudForm>
 
 
-            <!-- Submit Button -->
-            <div class="row">
-                <div class="col-md-3">
-                <button type="submit" disabled="@((contract.contract.Position == oldVersion.contract.Position
-                                    && contract.contract.Description == oldVersion.contract.Description
-                                    && contract.contract.StartDate == oldVersion.contract.StartDate
-                                    && contract.contract.EndDate == oldVersion.contract.EndDate
-                                    && contract.contract.Wage == oldVersion.contract.Wage)
-                                    && contract.contract.User.FirstName == oldVersion.contract.User.FirstName
-                                    && contract.contract.User.LastName == oldVersion.contract.User.LastName)" 
-                                    class="btn btn-primary w-100">
-                        Update Contract
-                </button>
-                </div>
-            </div>
-    </EditForm>
 }
 @code {
     [Parameter]

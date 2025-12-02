@@ -14,8 +14,8 @@ namespace ContractManagement.Model.DTO
         public int Id { get; set; }
         public string Position { get; set; } = null!; // Employee role
         public string Description { get; set; } = null!;
-        public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
         [Range(100, double.MaxValue, ErrorMessage = "The wage must be at least $100")]
         public decimal Wage { get; set; }
     }

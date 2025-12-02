@@ -79,8 +79,8 @@ else if(company!=null && company.CompanyName!="") {
                     <MudTd>@context.User.FirstName @context.User.LastName</MudTd>
                     <MudTd>@context.Position</MudTd>
                     <MudTd>@context.Description</MudTd>
-                    <MudTd>@context.StartDate.ToShortDateString()</MudTd>
-                    <MudTd>@context.EndDate.ToShortDateString()</MudTd>
+                    <MudTd>@context.StartDate?.ToShortDateString()</MudTd>
+                    <MudTd>@context.EndDate?.ToShortDateString()</MudTd>
                     <MudTd>@context.Wage.ToString("F2")</MudTd>
                     <MudTd>
                         <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary"
@@ -115,8 +115,8 @@ else
             (string.IsNullOrWhiteSpace(searchString) ||
              c.Position.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
              c.Description.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
-             c.User.FirstName.Contains(searchString, StringComparison.OrdinalIgnoreCase)) ||
-             c.User.LastName.Contains(searchString, StringComparison.OrdinalIgnoreCase)
+             c.User.FirstName.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
+             c.User.LastName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
             &&
             (selectedStatus == "All" ||
              (selectedStatus == "Active" && c.StartDate <= DateTime.Today && c.EndDate >= DateTime.Today) ||

@@ -11,7 +11,7 @@ builder.Services.AddRazorComponents()
        .AddInteractiveServerComponents(); // no prerender
 
 builder.Services.AddBlazoredLocalStorage();
-builder.Services.AddMudServices();
+builder.Services.AddMudServices(options=> { options.PopoverOptions.CheckForPopoverProvider = false; });
 // JWT & Auth
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<AuthService>();
