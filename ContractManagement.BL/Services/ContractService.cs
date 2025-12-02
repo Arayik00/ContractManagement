@@ -1,7 +1,8 @@
 ﻿using ContractManagement.BL.Interfaces;
 using ContractManagement.Database.Interfaces;
 using ContractManagement.Database.Repositories;
-using ContractManagement.Model.Models;
+using ContractManagement.Model.DTO;
+using ContractManagement.Model.Entities;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
@@ -25,12 +26,17 @@ namespace ContractManagement.BL.Services
             return await _contractRepository.GetAll();
         }
 
-        public async Task<Contracts?> GetContractById(int id)
+        public async Task<EditContractDto?> GetContractById(int id)
         {
-            return await _contractRepository.GetById(id);
+            var contract = await _contractRepository.GetById(id);
+            return new EditContractDto
+            {
+                contract = contract,
+                hasAdminAccess = false,
+            };
         }
 
-        public async Task<List<ContractNames>> GetAllCompanyContracts(int companyId)
+        public async Task<List<ContractDto>> GetAllCompanyContracts(int companyId)
         {
             return await _contractRepository.GetAllCompanyContracts(companyId);
         }
@@ -45,13 +51,13 @@ namespace ContractManagement.BL.Services
             return await _contractRepository.DeleteContractAsync(ContractId);
         }
 
-        public async Task<bool> UpdateContractData(Contracts updatedContract)
+        public async Task<bool> UpdateContractData(EditContractDto updatedContract)
         {
             return await _contractRepository.UpdateContractData(updatedContract);
         }
-        public async Task<bool> CanUserEditContractAsync(int contractId, int userId)
+        public async Task<string> getUserAccessLevel(int contractId, int userId)
         {
-            return await _contractRepository.CanUserEditContractAsync(contractId, userId);
+            return await _contractRepository.getUserAccessLevel(contractId, userId);
         }
     }
 }

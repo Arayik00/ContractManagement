@@ -1,5 +1,5 @@
 ﻿using ContractManagement.Database.Interfaces;
-using ContractManagement.Model.Models;
+using ContractManagement.Model.Entities;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using System;

@@ -1,4 +1,5 @@
 ﻿@page "/editcontract/{contractId:int}"
+@using ContractManagement.Model.Entities
 @inherits ContractManagement.UI.ProtectedPageBase
 @inject HttpClient Http
 @inject NavigationManager Nav
@@ -11,11 +12,23 @@
 else
 {
     <EditForm Model="@contract" OnValidSubmit="UpdateContractAsync">
+        <div class="row mb-3">
+            <div class="col-md-8">
+                <label for="description" class="form-label">First Name</label>
+                <input id="description" class="form-control" @bind="contract.contract.User.FirstName" rows="4" @bind:event="oninput"></input>
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-8">
+                <label for="description" class="form-label">Last Name</label>
+                <input id="description" class="form-control" @bind="contract.contract.User.LastName" rows="4" @bind:event="oninput"></input>
+            </div>
+        </div>
         <!-- Position / Role -->
             <div class="row mb-3">
                 <div class="col-md-6">
                     <label for="position" class="form-label">Position / Role</label>
-                <input id="position" type="text" class="form-control" @bind="contract.Position" @bind:event="oninput" required />
+                <input id="position" type="text" class="form-control" @bind="contract.contract.Position" @bind:event="oninput" required />
                 </div>
             </div>
 
@@ -23,7 +36,7 @@ else
             <div class="row mb-3">
                 <div class="col-md-8">
                     <label for="description" class="form-label">Description</label>
-                <textarea id="description" class="form-control" @bind="contract.Description" rows="4" @bind:event="oninput"></textarea>
+                <textarea id="description" class="form-control" @bind="contract.contract.Description" rows="4" @bind:event="oninput"></textarea>
                 </div>
             </div>
 
@@ -31,11 +44,11 @@ else
             <div class="row mb-3">
                 <div class="col-md-3">
                     <label for="startDate" class="form-label">Start Date</label>
-                <input id="startDate" type="date" class="form-control" @bind="contract.StartDate" @bind:event="oninput" required />
+                <input id="startDate" type="date" class="form-control" @bind="contract.contract.StartDate" @bind:event="oninput" readonly="@(!contract.hasAdminAccess)" required />
                 </div>
                 <div class="col-md-3">
                     <label for="endDate" class="form-label">End Date</label>
-                <input id="endDate" type="date" class="form-control" @bind="contract.EndDate" min="@contract.StartDate.ToString("yyyy-MM-dd")" @bind:event="oninput" required />
+                <input id="endDate" type="date" class="form-control" @bind="contract.contract.EndDate" min="@contract.contract.StartDate.ToString("yyyy-MM-dd")" readonly="@(!contract.hasAdminAccess)" @bind:event="oninput" required />
                 </div>
             </div>
 
@@ -44,7 +57,7 @@ else
                 <div class="col-md-3">
                     <label for="wage" class="form-label">Wage</label>
                     <div class="input-group">
-                    <input id="wage" type="number" class="form-control" @bind="contract.Wage" min="100" step="100" @bind:event="oninput" required />
+                    <input id="wage" type="number" class="form-control" @bind="contract.contract.Wage" min="100" step="100" @bind:event="oninput" readonly="@(!contract.hasAdminAccess)" required />
                         <span class="input-group-text">USD</span>
                     </div>
                 </div>
@@ -54,11 +67,15 @@ else
             <!-- Submit Button -->
             <div class="row">
                 <div class="col-md-3">
-                <button type="submit" disabled="@((contract.Position == oldVersion.Position
-                                                  && contract.Description == oldVersion.Description
-                                                  && contract.StartDate == oldVersion.StartDate
-                                                  && contract.EndDate == oldVersion.EndDate
-                                                  && contract.Wage == oldVersion.Wage))" class="btn btn-primary w-100">Update Contract
+                <button type="submit" disabled="@((contract.contract.Position == oldVersion.contract.Position
+                                    && contract.contract.Description == oldVersion.contract.Description
+                                    && contract.contract.StartDate == oldVersion.contract.StartDate
+                                    && contract.contract.EndDate == oldVersion.contract.EndDate
+                                    && contract.contract.Wage == oldVersion.contract.Wage)
+                                    && contract.contract.User.FirstName == oldVersion.contract.User.FirstName
+                                    && contract.contract.User.LastName == oldVersion.contract.User.LastName)" 
+                                    class="btn btn-primary w-100">
+                        Update Contract
                 </button>
                 </div>
             </div>
@@ -68,8 +85,8 @@ else
     [Parameter]
     public int ContractId { get; set; }
     private string message = "Loading contract...";
-    private ContractManagement.Model.Models.Contracts contract;
-    private ContractManagement.Model.Models.Contracts oldVersion;
+    private EditContractDto contract;
+    private EditContractDto oldVersion;
     private bool firstRender = true;
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -98,14 +115,24 @@ else
         }
         else if (response.IsSuccessStatusCode)
         {
-            contract = await response.Content.ReadFromJsonAsync<ContractManagement.Model.Models.Contracts>();
-            oldVersion = new ContractManagement.Model.Models.Contracts
+            contract = await response.Content.ReadFromJsonAsync<EditContractDto>();
+
+            oldVersion = new EditContractDto
             {
-                Position = contract.Position,
-                Description = contract.Description,
-                StartDate = contract.StartDate,
-                EndDate = contract.EndDate,
-                Wage = contract.Wage
+                contract = new ContractDto
+                {
+                    Position = contract.contract.Position,
+                    Description = contract.contract.Description,
+                    StartDate = contract.contract.StartDate,
+                    EndDate = contract.contract.EndDate,
+                    Wage = contract.contract.Wage,
+                    User = new UserDto
+                    {
+                        FirstName = contract.contract.User.FirstName,
+                        LastName = contract.contract.User.LastName
+                    },
+                },
+                hasAdminAccess = contract.hasAdminAccess
             };
         }
         StateHasChanged();
@@ -124,7 +151,7 @@ else
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwt);
 
         // POST to RESTful endpoint
-        var status = await Http.PatchAsJsonAsync<ContractManagement.Model.Models.Contracts>($"/api/contracts/{ContractId}", contract);
+        var status = await Http.PatchAsJsonAsync<EditContractDto>($"/api/contracts/{ContractId}", contract);
         if (status.IsSuccessStatusCode)
         {
             Nav.NavigateTo("/myCompany");

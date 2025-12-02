@@ -1,4 +1,5 @@
 ﻿@page "/MyContracts"
+@using ContractManagement.Model.Entities
 @inherits ContractManagement.UI.ProtectedPageBase
 @inject ContractManagement.UI.Services.AuthService AuthService
 @inject HttpClient Http
@@ -42,7 +43,7 @@ else
 
 
 @code {
-    private List<ContractManagement.Model.Models.Contracts> myContracts = new();
+    private List<Contracts> myContracts = new();
     private bool firstRender = true;
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -62,7 +63,7 @@ else
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwt);
 
         // Get user's company
-        var contracts = await Http.GetFromJsonAsync<List<ContractManagement.Model.Models.Contracts>>($"/api/users/contracts/{id}");
+        var contracts = await Http.GetFromJsonAsync<List<Contracts>>($"/api/users/contracts/{id}");
         if (contracts == null || contracts.Count == 0)
         {
             return;

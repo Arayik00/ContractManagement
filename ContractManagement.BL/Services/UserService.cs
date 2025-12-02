@@ -1,6 +1,8 @@
 ﻿using ContractManagement.BL.Interfaces;
 using ContractManagement.Database.Interfaces;
-using ContractManagement.Model.Models;
+using ContractManagement.Model.DTO;
+using ContractManagement.Model.Entities;
+
 namespace ContractManagement.BL.Services
 {
     public class UserService : IUserService
@@ -12,19 +14,43 @@ namespace ContractManagement.BL.Services
             _userRepository = userRepository;
         }
 
-        public async Task<List<Users>> GetAllUsers()
+        public async Task<List<UserDto>> GetAllUsers()
         {
-            return await _userRepository.GetAll();
+            var response =  await _userRepository.GetAll();
+            List<UserDto> users = new ();
+            foreach (var user in response)
+            {
+                users.Add(new UserDto
+                {
+                    Id = user.Id,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName
+                });
+            }
+            return users;
         }
 
-        public async Task<Users?> GetUserById(int id)
+        public async Task<UserDto?> GetUserById(int id)
         {
-            return await _userRepository.GetById(id);
+            var response = await _userRepository.GetById(id);
+            return new UserDto
+            {
+                Id = response.Id,
+                FirstName = response.FirstName,
+                LastName = response.LastName
+            };
         }
 
-        public async Task<Users?> GetUserByUsername(string username)
+        public async Task<UserDto?> GetUserByUsername(string username)
         {
-            return await _userRepository.GetUserByUsername(username);
+            var response = await _userRepository.GetUserByUsername(username);
+            if (response == null) return null;
+            return new UserDto
+            {
+                Id = response.Id,
+                FirstName = response.FirstName,
+                LastName = response.LastName
+            };
         }
 
         public async Task<bool> CreateUserAsync(Users user)
@@ -40,6 +66,10 @@ namespace ContractManagement.BL.Services
         public async Task<List<Contracts>> GetContractsByUserIdAsync(int userId)
         {
             return await _userRepository.GetContractsByUserIdAsync(userId);
+        }
+        public async Task<bool> UpdateUserAsync(UserDto user)
+        {
+            return await _userRepository.UpdateUserAsync(user);
         }
 
 

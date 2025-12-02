@@ -1,19 +1,22 @@
-﻿using ContractManagement.Model.Models;
+﻿using ContractManagement.Model.DTO;
+using ContractManagement.Model.Entities;
 
 namespace ContractManagement.BL.Interfaces
 {
     public interface IUserService
     {
-        Task<List<Users>> GetAllUsers();
-        Task<Users?> GetUserById(int id);
+        Task<List<UserDto>> GetAllUsers();
+        Task<UserDto?> GetUserById(int id);
 
-        Task<Users?> GetUserByUsername(string username);
+        Task<UserDto?> GetUserByUsername(string username);
 
         Task<bool> CreateUserAsync(Users user);
 
         Task<bool> UserHasCompanyAsync(int userId);
 
         Task<List<Contracts>> GetContractsByUserIdAsync(int userId);
+
+        Task<bool> UpdateUserAsync(UserDto user);
 
 
     }

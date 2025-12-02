@@ -1,4 +1,5 @@
 ﻿@page "/MyCompany"
+@using ContractManagement.Model.Entities
 @inherits ContractManagement.UI.ProtectedPageBase
 @inject HttpClient Http
 @inject NavigationManager Nav
@@ -56,7 +57,6 @@ else if(company!=null && company.CompanyName!="") {
                               Adornment="Adornment.Start"
                               AdornmentIcon="@Icons.Material.Filled.Search"
                               Variant="Variant.Outlined" />
-
                 <select @bind="selectedStatus" class="form-select w-auto">
                     @foreach (var status in statuses)
                     {
@@ -64,7 +64,6 @@ else if(company!=null && company.CompanyName!="") {
                     }
                 </select>
             </div>
-
             <MudTable Items="@FilteredContracts" Style="cursor:default" Hover="true" Class="mud-table-bordered">
                 <HeaderContent>
                     <MudTh>Name</MudTh>
@@ -77,17 +76,17 @@ else if(company!=null && company.CompanyName!="") {
                 </HeaderContent>
 
                 <RowTemplate>
-                    <MudTd>@context.firstName @context.lastName</MudTd>
-                    <MudTd>@context.contract.Position</MudTd>
-                    <MudTd>@context.contract.Description</MudTd>
-                    <MudTd>@context.contract.StartDate.ToShortDateString()</MudTd>
-                    <MudTd>@context.contract.EndDate.ToShortDateString()</MudTd>
-                    <MudTd>@context.contract.Wage.ToString("F2")</MudTd>
+                    <MudTd>@context.User.FirstName @context.User.LastName</MudTd>
+                    <MudTd>@context.Position</MudTd>
+                    <MudTd>@context.Description</MudTd>
+                    <MudTd>@context.StartDate.ToShortDateString()</MudTd>
+                    <MudTd>@context.EndDate.ToShortDateString()</MudTd>
+                    <MudTd>@context.Wage.ToString("F2")</MudTd>
                     <MudTd>
                         <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary"
-                                       OnClick="@(() => EditContract(context.contract.Id))" />
+                                       OnClick="@(() => EditContract(context.Id))" />
                         <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
-                                       OnClick="@(() => DeleteContract(context.contract.Id))" />
+                                       OnClick="@(() => DeleteContract(context.Id))" />
                     </MudTd>
                 </RowTemplate>
             </MudTable>
@@ -102,7 +101,7 @@ else
 @code {
     // --- State ---
     private Companies company;
-    private List<ContractNames> companyContracts = new();
+    private List<ContractDto> companyContracts = new();
     private string searchString = "";
     private string selectedStatus = "All";
     private readonly string[] statuses = new[] { "All", "Active", "Finished", "NotStartedYet" };
@@ -111,17 +110,18 @@ else
 
 
     // --- Computed Property for Filtering ---
-    private IEnumerable<ContractNames> FilteredContracts =>
+    private IEnumerable<ContractDto> FilteredContracts =>
         companyContracts.Where(c =>
             (string.IsNullOrWhiteSpace(searchString) ||
-             c.contract.Position.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
-             c.firstName.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
-             c.lastName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+             c.Position.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
+             c.Description.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
+             c.User.FirstName.Contains(searchString, StringComparison.OrdinalIgnoreCase)) ||
+             c.User.LastName.Contains(searchString, StringComparison.OrdinalIgnoreCase)
             &&
             (selectedStatus == "All" ||
-             (selectedStatus == "Active" && c.contract.StartDate <= DateTime.Today && c.contract.EndDate >= DateTime.Today) ||
-             (selectedStatus == "Finished" && c.contract.EndDate < DateTime.Today) ||
-             (selectedStatus == "NotStartedYet" && c.contract.StartDate > DateTime.Today))
+             (selectedStatus == "Active" && c.StartDate <= DateTime.Today && c.EndDate >= DateTime.Today) ||
+             (selectedStatus == "Finished" && c.EndDate < DateTime.Today) ||
+             (selectedStatus == "NotStartedYet" && c.StartDate > DateTime.Today))
         );
 
     // --- Lifecycle ---
@@ -159,7 +159,7 @@ else
         if (companies.Count > 0)
         {
             company = companies.FirstOrDefault();
-            var contracts = await Http.GetFromJsonAsync<List<ContractNames>>($"/api/contracts/company/{company.Id}");
+            var contracts = await Http.GetFromJsonAsync<List<ContractDto>>($"/api/contracts/company/{company.Id}");
             if (contracts != null)
                 companyContracts = contracts;
         }

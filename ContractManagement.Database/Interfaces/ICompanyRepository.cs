@@ -1,4 +1,4 @@
-﻿using ContractManagement.Model.Models;
+﻿using ContractManagement.Model.Entities;
 using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;

@@ -1,4 +1,5 @@
-﻿using ContractManagement.Model.Models;
+﻿using ContractManagement.Model.DTO;
+using ContractManagement.Model.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,17 +10,17 @@ namespace ContractManagement.BL.Interfaces
 {
     public interface IContractService
     {
-        Task<Contracts>? GetContractById(int id);
+        Task<EditContractDto>? GetContractById(int id);
         Task<List<Contracts>> GetAllContracts();
-        Task<List<ContractNames>> GetAllCompanyContracts(int companyId);
+        Task<List<ContractDto>> GetAllCompanyContracts(int companyId);
 
         Task<bool> InsertContractAsync(Contracts contract);
 
         Task<bool> DeleteContractAsync(int ContractId);
 
-        Task<bool> UpdateContractData(Contracts updatedContract);
+        Task<bool> UpdateContractData(EditContractDto updatedContract);
 
-        Task<bool> CanUserEditContractAsync(int contractId, int userId);
+        Task<string> getUserAccessLevel(int contractId, int userId);
 
 
     }

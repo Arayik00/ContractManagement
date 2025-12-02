@@ -1,5 +1,6 @@
 ﻿using ContractManagement.Database.Interfaces;
-using ContractManagement.Model.Models;
+using ContractManagement.Model.DTO;
+using ContractManagement.Model.Entities;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using System;
@@ -22,10 +23,11 @@ namespace ContractManagement.Database.Repositories
             _connectionString = _configuration.GetConnectionString("DefaultConnection");
         }
 
-        public async Task<Contracts>? GetById(int id)
+        public async Task<ContractDto>? GetById(int id)
         {
             using var conn = new SqlConnection(_connectionString);
-            using var cmd = new SqlCommand("SELECT * FROM Contracts WHERE Id=@id", conn);
+            using var cmd = new SqlCommand("Select c.Id, u.FirstName, u.LastName, c.Description, c.Position,c.Wage, c.StartDate, c.EndDate, c.UserId " +
+                "From Contracts c join Users u on c.UserId = u.Id where c.Id = @id", conn);
             cmd.Parameters.AddWithValue("@id", id);
 
             await conn.OpenAsync();
@@ -33,16 +35,20 @@ namespace ContractManagement.Database.Repositories
             using var reader = await cmd.ExecuteReaderAsync();
             if (!await reader.ReadAsync()) return null;
 
-            return new Contracts
+            return new ContractDto
             {
                 Id = (int)reader["Id"],
-                CompanyId = (int)reader["CompanyId"],
-                UserId = (int)reader["UserId"],
                 Position = (string)reader["Position"],
                 Description = (string)reader["Description"],
                 StartDate = (DateTime)reader["StartDate"],
                 EndDate = (DateTime)reader["EndDate"],
-                Wage = (decimal)reader["Wage"]
+                Wage = (decimal)reader["Wage"],
+                User = new UserDto
+                {
+                    Id = (int)reader["UserId"],
+                    FirstName = (string)reader["FirstName"],
+                    LastName = (string)reader["LastName"]
+                }
             };
         }
         public async Task<List<Contracts>> GetAll()
@@ -69,9 +75,9 @@ namespace ContractManagement.Database.Repositories
             return contracts;
         }
 
-        public async Task<List<ContractNames>> GetAllCompanyContracts(int companyId)
+        public async Task<List<ContractDto>> GetAllCompanyContracts(int companyId)
         {
-            var list = new List<ContractNames>();
+            var list = new List<ContractDto>();
             using var conn = new SqlConnection(_connectionString);
             await conn.OpenAsync();
 
@@ -88,24 +94,22 @@ namespace ContractManagement.Database.Repositories
             using var reader = await cmd.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
-                Contracts contract = new Contracts
+                ContractDto contract = new ContractDto
                 {
                     Id = reader.GetInt32(0),
-                    CompanyId = reader.GetInt32(1),
                     Position = reader.GetString(2),
                     Description = reader.GetString(3),
                     StartDate = reader.GetDateTime(4),
                     EndDate = reader.GetDateTime(5),
                     Wage = reader.GetDecimal(6),
+                    User = new UserDto
+                    {
+                        FirstName = reader.GetString(7),
+                        LastName = reader.GetString(8),
+                    }
                 };
-                string firstName = reader.GetString(7);
-                string lastName = reader.GetString(8);
-                list.Add(new ContractNames
-                {
-                    contract = contract,
-                    firstName = firstName,
-                    lastName = lastName,
-                });
+                
+                list.Add(contract);
             }
             return list;
         }
@@ -155,11 +159,11 @@ namespace ContractManagement.Database.Repositories
             return rowsAffected > 0;
         }
 
-        public async Task<bool> UpdateContractData(Contracts updatedContract)
+        public async Task<bool> UpdateContractData(EditContractDto updatedContract)
         {
             using var conn = new SqlConnection(_connectionString);
             await conn.OpenAsync();
-            var sql = @"
+            string sqlAdmin = @"
             UPDATE Contracts
             SET 
                 Position = @Position,
@@ -168,18 +172,25 @@ namespace ContractManagement.Database.Repositories
                 EndDate = @EndDate,
                 Wage = @Wage
             WHERE Id = @ContractId";
+            string sqlUser = @"
+            UPDATE Contracts
+            SET 
+                Position = @Position,
+                Description = @Description
+            WHERE Id = @ContractId";
+            var sql = updatedContract.hasAdminAccess ? sqlAdmin : sqlUser;
             using var cmd = new SqlCommand(sql, conn);
-            cmd.Parameters.AddWithValue("@Position", updatedContract.Position ?? (object)DBNull.Value);
-            cmd.Parameters.AddWithValue("@Description", updatedContract.Description ?? (object)DBNull.Value);
-            cmd.Parameters.AddWithValue("@StartDate", updatedContract.StartDate);
-            cmd.Parameters.AddWithValue("@EndDate", updatedContract.EndDate);
-            cmd.Parameters.AddWithValue("@Wage", updatedContract.Wage);
-            cmd.Parameters.AddWithValue("@ContractId", updatedContract.Id);
+            cmd.Parameters.AddWithValue("@Position", updatedContract.contract.Position ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("@Description", updatedContract.contract.Description ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("@StartDate", updatedContract.contract.StartDate);
+            cmd.Parameters.AddWithValue("@EndDate", updatedContract.contract.EndDate);
+            cmd.Parameters.AddWithValue("@Wage", updatedContract.contract.Wage);
+            cmd.Parameters.AddWithValue("@ContractId", updatedContract.contract.Id);
             int rowsAffected = await cmd.ExecuteNonQueryAsync();
             return rowsAffected > 0;
         }
 
-        public async Task<bool> CanUserEditContractAsync(int contractId, int userId)
+        public async Task<string> getUserAccessLevel(int contractId, int userId)
         {
             using var conn = new SqlConnection(_connectionString);
             await conn.OpenAsync();
@@ -194,11 +205,11 @@ namespace ContractManagement.Database.Repositories
             cmd.Parameters.AddWithValue("@cid", contractId);
 
             using var reader = await cmd.ExecuteReaderAsync();
-            if (!reader.Read()) return false;
+            if (!reader.Read()) return "Denied";
 
             int companyAdminId = (int)reader["AdminId"];
 
-            return userId == companyAdminId;
+            return userId == companyAdminId? "Full": "Partial";
         }
     }
 }

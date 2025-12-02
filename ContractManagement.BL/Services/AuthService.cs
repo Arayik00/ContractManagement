@@ -1,6 +1,6 @@
 ﻿using ContractManagement.BL.Interfaces;
 using ContractManagement.Database.Interfaces;
-using ContractManagement.Model.Models;
+using ContractManagement.Model.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;

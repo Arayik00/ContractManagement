@@ -1,5 +1,6 @@
 ﻿using ContractManagement.BL.Interfaces;
-using ContractManagement.Model.Models;
+using ContractManagement.Model.DTO;
+using ContractManagement.Model.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.Design;
@@ -14,10 +15,13 @@ namespace ContractManagement.ApiServer.Controllers
     public class ContractsController : ControllerBase
     {
         private readonly IContractService _contractService;
+        private readonly IUserService _userService;
 
-        public ContractsController(IContractService contractService)
+
+        public ContractsController(IContractService contractService, IUserService userService)
         {
             _contractService = contractService;
+            _userService = userService;
         }
 
         // GET api/contracts
@@ -35,11 +39,12 @@ namespace ContractManagement.ApiServer.Controllers
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
                 return Unauthorized(); // 401
-            bool userCanEditContract = await _contractService.CanUserEditContractAsync(id, userId);
-            if (!userCanEditContract)
+            string UserAccessLevel = await _contractService.getUserAccessLevel(id, userId);
+            if (UserAccessLevel == "Denied")
             { return Forbid(); 
             }
             var contract = await _contractService.GetContractById(id);
+            contract.hasAdminAccess = UserAccessLevel == "Full";
             return contract == null ? NotFound() : Ok(contract);
         }
 
@@ -72,10 +77,15 @@ namespace ContractManagement.ApiServer.Controllers
 
         // PATCH api/contracts/5
         [HttpPatch("{id:int}")]
-        public async Task<IActionResult> Update(int id, Contracts updatedContract)
+        public async Task<IActionResult> Update(int id, EditContractDto updatedContract)
         {
-            updatedContract.Id = id; // enforce consistency
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
+                return Unauthorized(); // 401
+            updatedContract.contract.Id = id; // enforce consistency
+            updatedContract.hasAdminAccess = (await _contractService.getUserAccessLevel(id, userId)) == "Full";
             var result = await _contractService.UpdateContractData(updatedContract);
+            result = await _userService.UpdateUserAsync(updatedContract.contract.User);
             return Ok(result);
         }
 

@@ -1,5 +1,5 @@
 ﻿using ContractManagement.BL.Interfaces;
-using ContractManagement.Model.Models;
+using ContractManagement.Model.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

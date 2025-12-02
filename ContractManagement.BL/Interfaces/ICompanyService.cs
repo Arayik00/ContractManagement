@@ -1,4 +1,4 @@
-﻿using ContractManagement.Model.Models;
+﻿using ContractManagement.Model.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -1,4 +1,5 @@
-﻿using ContractManagement.Model.Models;
+﻿using ContractManagement.Model.DTO;
+using ContractManagement.Model.Entities;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
@@ -21,6 +22,7 @@ namespace ContractManagement.Database.Interfaces
 
         Task<List<Contracts>> GetContractsByUserIdAsync(int userId);
 
+        Task<bool> UpdateUserAsync(UserDto user);
 
 
     }

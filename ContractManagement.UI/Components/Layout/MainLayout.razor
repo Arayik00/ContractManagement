@@ -1,15 +1,19 @@
-﻿@using Microsoft.AspNetCore.Authorization
-@inherits LayoutComponentBase
+﻿@inherits LayoutComponentBase
 @inject NavigationManager Nav
 
+<MudThemeProvider IsDarkMode="true" />
 <div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+    <!-- Using MudPaper for proper theming -->
+    <MudPaper Width="250px" Class="d-inline-flex" Elevation="0">
+        <MudNavMenu Class="mud-width-full">
+            <NavMenu />
+        </MudNavMenu>
+    </MudPaper>
 
     <main>
-        <div class="top-row px-4">
-            <a type="button" href="/logout">Log out</a>
+        <!-- Dark background for the navbar using MudBlazor's dark color system -->
+        <div class="top-row px-4 mud-theme-dark">
+            <a type="button" href="/logout" class="text-white">Log out</a>
         </div>
 
         <article class="content px-4">

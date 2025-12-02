@@ -1,5 +1,6 @@
 ﻿using ContractManagement.Database.Interfaces;
-using ContractManagement.Model.Models;
+using ContractManagement.Model.DTO;
+using ContractManagement.Model.Entities;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using System;
@@ -179,6 +180,24 @@ namespace ContractManagement.Database.Repositories
             }
             return list;
         }
+
+        public async Task<bool> UpdateUserAsync(UserDto user)
+        {
+            if (user == null)
+            {
+                return false;
+            }
+            using var conn = new SqlConnection(_connectionString);
+            await conn.OpenAsync();
+            using var cmd = new SqlCommand("UPDATE Users SET FirstName = @FirstName, LastName = @LastName " +
+                "WHERE Id = @UserId;", conn);
+            cmd.Parameters.AddWithValue("@UserId", user.Id);
+            cmd.Parameters.AddWithValue("@FirstName", user.FirstName);
+            cmd.Parameters.AddWithValue("@LastName", user.LastName);
+            var rowsAffected = await cmd.ExecuteNonQueryAsync();
+            return rowsAffected > 0; // true if insert succeeded
+        }
+
 
     }
 }
