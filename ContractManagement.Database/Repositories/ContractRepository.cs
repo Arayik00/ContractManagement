@@ -196,7 +196,7 @@ namespace ContractManagement.Database.Repositories
             await conn.OpenAsync();
 
             var cmd = new SqlCommand(@"
-                SELECT c.CompanyId, co.AdminId
+                SELECT c.CompanyId, co.AdminId, c.UserId
                 FROM Contracts c
                 JOIN Companies co ON c.CompanyId = co.Id
                 WHERE c.Id = @cid;
@@ -208,8 +208,8 @@ namespace ContractManagement.Database.Repositories
             if (!reader.Read()) return "Denied";
 
             int companyAdminId = (int)reader["AdminId"];
-
-            return userId == companyAdminId? "Full": "Partial";
+            int companyUserId = (int)reader["UserId"];
+            return userId == companyAdminId? "Full": (userId == companyUserId? "Partial":"Denied");
         }
     }
 }

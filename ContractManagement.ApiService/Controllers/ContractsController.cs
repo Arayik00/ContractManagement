@@ -40,8 +40,10 @@ namespace ContractManagement.ApiServer.Controllers
             if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
                 return Unauthorized(); // 401
             string UserAccessLevel = await _contractService.getUserAccessLevel(id, userId);
+            Console.WriteLine(UserAccessLevel);
             if (UserAccessLevel == "Denied")
-            { return Forbid(); 
+            { 
+                return Forbid(); 
             }
             var contract = await _contractService.GetContractById(id);
             contract.hasAdminAccess = UserAccessLevel == "Full";
@@ -83,7 +85,12 @@ namespace ContractManagement.ApiServer.Controllers
             if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
                 return Unauthorized(); // 401
             updatedContract.contract.Id = id; // enforce consistency
-            updatedContract.hasAdminAccess = (await _contractService.getUserAccessLevel(id, userId)) == "Full";
+            var access = await _contractService.getUserAccessLevel(id, userId);
+            if(access == "Denied")
+            {
+                return Unauthorized(); // 401
+            }
+            updatedContract.hasAdminAccess = access == "Full";
             var result = await _contractService.UpdateContractData(updatedContract);
             result = await _userService.UpdateUserAsync(updatedContract.contract.User);
             return Ok(result);
