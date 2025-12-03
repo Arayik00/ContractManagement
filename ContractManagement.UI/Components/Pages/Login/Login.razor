@@ -1,4 +1,5 @@
 ﻿@page "/login"
+@using ContractManagement.UI.Models
 @inject AuthService AuthState
 @inject NavigationManager Nav
 @inject HttpClient Http
@@ -22,6 +23,10 @@
 
         <!-- LOGIN FORM -->
         <EditForm Model="@loginModel" OnValidSubmit="LogInAsync" class="login">
+            @if (!string.IsNullOrEmpty(loginError))
+            {
+                <div class="small text-danger">@loginError</div>
+            }
             <div class="login">
                 <div class="field">
                     <input @bind-value="loginModel.Username" @bind-value:event="oninput" type="text" placeholder="Username" required>
@@ -66,7 +71,7 @@
     private SignUpModel signupModel = new();
     private string? usernameError;
     private bool _firstRenderDone = false;
-
+    private string loginError = "";
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender && !_firstRenderDone)
@@ -102,10 +107,11 @@
 
     private async Task LogInAsync()
     {
+        loginError = "";
         var response = await Http.PostAsJsonAsync("/api/auth/login", loginModel);
         if (!response.IsSuccessStatusCode)
         {
-            Console.WriteLine("Login failed");
+            loginError = "Invalid username or password";
             return;
         }
 
@@ -127,21 +133,6 @@
         {
             usernameError = "Username already exists";
         }
-    }
-
-    // Models
-    public class LoginModel
-    {
-        public string Username { get; set; } = "";
-        public string Password { get; set; } = "";
-    }
-
-    public class SignUpModel
-    {
-        public string Username { get; set; } = "";
-        public string Password { get; set; } = "";
-        public string FirstName { get; set; } = "";
-        public string LastName { get; set; } = "";
     }
 
     public class LoginResponse

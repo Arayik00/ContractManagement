@@ -1,6 +1,9 @@
-﻿using ContractManagement.UI.Services;
+﻿using ContractManagement.Model.Entities;
+using ContractManagement.UI.Services;
 using Microsoft.AspNetCore.Components;
 using System.Threading.Tasks;
+using YamlDotNet.Core.Tokens;
+using static ContractManagement.UI.Components.Pages.Home;
 
 namespace ContractManagement.UI
 {

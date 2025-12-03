@@ -1,4 +1,5 @@
-﻿using ContractManagement.BL.Interfaces;
+﻿using Azure.Core;
+using ContractManagement.BL.Interfaces;
 using ContractManagement.BL.Services;
 using ContractManagement.Model.Entities;
 using Microsoft.AspNetCore.Authorization;
@@ -39,8 +40,23 @@ namespace ContractManagement.ApiServer.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> RegisterNewUser([FromBody] Users newUser)
         {
+            var errors = new List<string>();
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
+            if (string.IsNullOrWhiteSpace(newUser.FirstName))
+                errors.Add("First name is required.");
+
+            if (string.IsNullOrWhiteSpace(newUser.LastName))
+                errors.Add("Last name is required.");
+
+            if (newUser.Username.Length < 4)
+                errors.Add("Username must be at least 4 characters.");
+
+            if (newUser.Password.Length < 4)
+                errors.Add("Password must be at least 4 characters.");
+
+            if (errors.Any())
+                return BadRequest(new { Errors = errors });
 
             // Check if username already exists
             var existingUser = await _userService.GetUserByUsername(newUser.Username);

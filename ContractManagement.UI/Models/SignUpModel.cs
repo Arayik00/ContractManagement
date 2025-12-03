@@ -1,16 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
-namespace ContractManagement.Model.Entities
+namespace ContractManagement.UI.Models
 {
-    public class Users
+    public class SignUpModel
     {
-        public int Id { get; set; }             // Primary key
-
         [Required(ErrorMessage = "First name is required.")]
         [MinLength(2)]
         public string FirstName { get; set; } = null!;

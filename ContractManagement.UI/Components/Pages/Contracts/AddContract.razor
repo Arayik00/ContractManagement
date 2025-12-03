@@ -9,7 +9,7 @@
 
 @if (users == null)
 {
-      <div style="max-width: 400px;">
+    <div style="max-width: 400px;">
         <MudSkeleton Variant="Variant.Text" Animation="Animation.Wave" Width="60%" Height="30px" Style="margin-bottom: 20px;" />
         <MudSkeleton Variant="Variant.Rect" Animation="Animation.Wave" Width="100%" Height="40px" Style="border-radius: 6px; margin-bottom: 15px;" />
         <MudSkeleton Variant="Variant.Rect" Animation="Animation.Wave" Width="100%" Height="40px" Style="border-radius: 6px; margin-bottom: 15px;" />
@@ -72,7 +72,7 @@ else
                         <input id="wage" type="number" class="form-control" @bind="contract.Wage" min="100" step="100" required />
                         <span class="input-group-text">USD</span>
                     </div>
-                    <ValidationMessage For="@(()=>contract.Wage)" />
+                    <ValidationMessage For="@(() => contract.Wage)" />
                 </div>
             </div>
 

@@ -53,6 +53,7 @@ else if(company!=null && company.CompanyName!="") {
 
             <div class="d-flex mb-3">
                 <MudTextField @bind-Value="searchString"
+                              Immediate="true"
                               Placeholder="Search..."
                               Adornment="Adornment.Start"
                               AdornmentIcon="@Icons.Material.Filled.Search"

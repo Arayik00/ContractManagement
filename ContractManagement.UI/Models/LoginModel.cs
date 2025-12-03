@@ -1,4 +1,4 @@
-﻿namespace ContractManagement.Models
+﻿namespace ContractManagement.UI.Models
 {
     public class LoginModel
     {

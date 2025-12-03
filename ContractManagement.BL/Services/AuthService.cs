@@ -28,7 +28,6 @@ namespace ContractManagement.BL.Services
         {
             var user = await _users.GetByCredentialsAsync(username, password);
             if (user == null) return null;
-            Console.WriteLine(user.FirstName);
             return GenerateJwtToken(user);
         }
 
@@ -36,7 +35,6 @@ namespace ContractManagement.BL.Services
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
             var creds = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-            Console.WriteLine(user.FirstName);
 
             var claims = new[]
             {

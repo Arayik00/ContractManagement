@@ -13,7 +13,6 @@ builder.Services.AddRazorComponents()
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddMudServices(options=> { options.PopoverOptions.CheckForPopoverProvider = false; });
 // JWT & Auth
-builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddTransient<JwtAuthorizationHandler>();
 

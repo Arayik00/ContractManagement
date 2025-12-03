@@ -70,7 +70,7 @@ namespace ContractManagement.Database.Repositories
             await conn.OpenAsync();
 
             using var cmd = new SqlCommand(
-                "SELECT Id, FirstName FROM Users WHERE Username=@u AND Password=@p", conn);
+                "SELECT Id, FirstName, LastName FROM Users WHERE Username=@u AND Password=@p", conn);
 
             cmd.Parameters.AddWithValue("@u", username);
             cmd.Parameters.AddWithValue("@p", password);
@@ -82,7 +82,8 @@ namespace ContractManagement.Database.Repositories
                 return new Users
                 {
                     Id = reader.GetInt32(0),
-                    FirstName = reader.GetString(1)
+                    FirstName = reader.GetString(1),
+                    LastName = reader.GetString(2)
                 };
             }
 
@@ -115,6 +116,7 @@ namespace ContractManagement.Database.Repositories
 
         public async Task<bool> CreateUserAsync(Users user)
         {
+
             try
             {
                 using var conn = new SqlConnection(_connectionString);
