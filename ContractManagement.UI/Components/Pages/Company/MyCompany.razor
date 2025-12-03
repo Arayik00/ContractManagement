@@ -65,7 +65,7 @@ else if(company!=null && company.CompanyName!="") {
                     }
                 </select>
             </div>
-            <MudTable Items="@FilteredContracts" Style="cursor:default" Hover="true" Class="mud-table-bordered">
+            <MudTable Items="@FilteredContracts" Style="cursor:default" Hover="true" Class="mud-table-bordered" RowsPerPage="2">
                 <HeaderContent>
                     <MudTh>Name</MudTh>
                     <MudTh>Position</MudTh>
@@ -90,6 +90,9 @@ else if(company!=null && company.CompanyName!="") {
                                        OnClick="@(() => DeleteContract(context.Id))" />
                     </MudTd>
                 </RowTemplate>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
             </MudTable>
     </div>
 }

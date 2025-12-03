@@ -40,7 +40,8 @@ else
             <div class="row mb-3">
                 <div class="col-md-6">
                     <label for="position" class="form-label">Position / Role</label>
-                    <input id="position" type="text" class="form-control" @bind="contract.Position" required />
+                    <input id="position" type="text" class="form-control" @bind="contract.Position"  />
+                    <ValidationMessage For="@(() => contract.Position)" />
                 </div>
             </div>
 
@@ -49,6 +50,7 @@ else
                 <div class="col-md-8">
                     <label for="description" class="form-label">Description</label>
                     <textarea id="description" class="form-control" @bind="contract.Description" rows="4"></textarea>
+                    <ValidationMessage For="@(() => contract.Description)" />
                 </div>
             </div>
 
@@ -69,7 +71,7 @@ else
                 <div class="col-md-3">
                     <label for="wage" class="form-label">Wage</label>
                     <div class="input-group">
-                        <input id="wage" type="number" class="form-control" @bind="contract.Wage" min="100" step="100" required />
+                        <input id="wage" type="number" class="form-control" @bind="contract.Wage" step="100" required />
                         <span class="input-group-text">USD</span>
                     </div>
                     <ValidationMessage For="@(() => contract.Wage)" />
