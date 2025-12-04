@@ -1,8 +1,7 @@
-﻿using ContractManagement.BL.Interfaces;
-using ContractManagement.Database.Interfaces;
-using ContractManagement.Database.Repositories;
+﻿using ContractManagement.BL.Entities;
+using ContractManagement.BL.Interfaces;
 using ContractManagement.Model.DTO;
-using ContractManagement.Model.Entities;
+using ContractManagement.Model.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
@@ -40,7 +39,10 @@ namespace ContractManagement.BL.Services
         {
             return await _contractRepository.GetAllCompanyContracts(companyId);
         }
-
+        public async Task<FilterContractDto> GetAllCompanyContracts(int companyId, UserFilter filter)
+        {
+            return await _contractRepository.GetAllCompanyContracts(companyId, filter);
+        }
         public async Task<bool> InsertContractAsync(Contracts contract)
         {
             return await _contractRepository.InsertContractAsync(contract);

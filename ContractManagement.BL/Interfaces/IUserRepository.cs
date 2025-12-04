@@ -1,5 +1,5 @@
 ﻿using ContractManagement.Model.DTO;
-using ContractManagement.Model.Entities;
+using ContractManagement.BL.Entities;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ContractManagement.Database.Interfaces
+namespace ContractManagement.BL.Interfaces
 {
     public interface IUserRepository
     {

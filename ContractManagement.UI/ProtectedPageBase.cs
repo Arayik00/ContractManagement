@@ -1,4 +1,4 @@
-﻿using ContractManagement.Model.Entities;
+﻿using ContractManagement.BL.Entities;
 using ContractManagement.UI.Services;
 using Microsoft.AspNetCore.Components;
 using System.Threading.Tasks;

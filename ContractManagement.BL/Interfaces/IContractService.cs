@@ -1,5 +1,6 @@
-﻿using ContractManagement.Model.DTO;
-using ContractManagement.Model.Entities;
+﻿using ContractManagement.BL.Entities;
+using ContractManagement.Model.DTO;
+using ContractManagement.Model.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +14,7 @@ namespace ContractManagement.BL.Interfaces
         Task<EditContractDto>? GetContractById(int id);
         Task<List<Contracts>> GetAllContracts();
         Task<List<ContractDto>> GetAllCompanyContracts(int companyId);
-
+        Task<FilterContractDto> GetAllCompanyContracts(int companyId, UserFilter filter);
         Task<bool> InsertContractAsync(Contracts contract);
 
         Task<bool> DeleteContractAsync(int ContractId);

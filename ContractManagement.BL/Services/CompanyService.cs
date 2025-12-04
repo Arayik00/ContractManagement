@@ -1,7 +1,5 @@
 ﻿using ContractManagement.BL.Interfaces;
-using ContractManagement.Database.Interfaces;
-using ContractManagement.Database.Repositories;
-using ContractManagement.Model.Entities;
+using ContractManagement.BL.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;

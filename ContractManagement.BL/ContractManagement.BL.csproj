@@ -7,7 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ContractManagement.Database\ContractManagement.Database.csproj" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.3" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ContractManagement.Model\ContractManagement.Model.csproj" />
   </ItemGroup>
 

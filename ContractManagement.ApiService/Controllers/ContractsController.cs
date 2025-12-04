@@ -1,6 +1,7 @@
-﻿using ContractManagement.BL.Interfaces;
+﻿using ContractManagement.BL.Entities;
+using ContractManagement.BL.Interfaces;
 using ContractManagement.Model.DTO;
-using ContractManagement.Model.Entities;
+using ContractManagement.Model.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.Design;
@@ -51,13 +52,21 @@ namespace ContractManagement.ApiServer.Controllers
         }
 
         // GET api/contracts/company/3
+        //[HttpGet("company/{companyId:int}")]
+        //public async Task<IActionResult> GetAllCompanyContracts(int companyId)
+        //{
+        //    var contracts = await _contractService.GetAllCompanyContracts(companyId);
+        //    return Ok(contracts);
+        //}
+        // GET api/contracts/company/3
         [HttpGet("company/{companyId:int}")]
-        public async Task<IActionResult> GetAllCompanyContracts(int companyId)
+        public async Task<IActionResult> GetAllCompanyContracts(int companyId, [FromQuery] UserFilter filter)
         {
-            var contracts = await _contractService.GetAllCompanyContracts(companyId);
+            Console.WriteLine(filter.contractStatus);
+
+            var contracts = await _contractService.GetAllCompanyContracts(companyId, filter);
             return Ok(contracts);
         }
-
         // POST api/contracts
         [HttpPost]
         public async Task<IActionResult> Create(Contracts contract)

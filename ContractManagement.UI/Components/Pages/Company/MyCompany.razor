@@ -1,5 +1,7 @@
 ﻿@page "/MyCompany"
-@using ContractManagement.Model.Entities
+@using ContractManagement.BL.Entities
+@using ContractManagement.Model.Models
+
 @inherits ContractManagement.UI.ProtectedPageBase
 @inject HttpClient Http
 @inject NavigationManager Nav
@@ -47,53 +49,63 @@
 
 
 }
-else if(company!=null && company.CompanyName!="") {
+else if (company != null && company.CompanyName != "")
+{
     <div>
-            <h3>@company.CompanyName</h3>
+        <h3>@company.CompanyName</h3>
 
-            <div class="d-flex mb-3">
-                <MudTextField @bind-Value="searchString"
-                              Immediate="true"
-                              Placeholder="Search..."
-                              Adornment="Adornment.Start"
-                              AdornmentIcon="@Icons.Material.Filled.Search"
-                              Variant="Variant.Outlined" />
-                <select @bind="selectedStatus" class="form-select w-auto">
-                    @foreach (var status in statuses)
-                    {
-                        <option value="@status">@status</option>
-                    }
-                </select>
-            </div>
-            <MudTable Items="@FilteredContracts" Style="cursor:default" Hover="true" Class="mud-table-bordered" RowsPerPage="2">
-                <HeaderContent>
-                    <MudTh>Name</MudTh>
-                    <MudTh>Position</MudTh>
-                    <MudTh>Description</MudTh>
-                    <MudTh>Start Date</MudTh>
-                    <MudTh>End Date</MudTh>
-                    <MudTh>Wage</MudTh>
-                    <MudTh>Actions</MudTh>
-                </HeaderContent>
+        <div class="d-flex mb-3">
+            <MudTextField @bind-Value="filter.searchKey"
+                          Placeholder="Search..."
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Variant="Variant.Outlined" />
+            <select @bind="filter.contractStatus" class="form-select w-auto">
+                @foreach (var status in statuses)
+                {
+                    <option value="@status">@status</option>
+                }
+            </select>
 
-                <RowTemplate>
-                    <MudTd>@context.User.FirstName @context.User.LastName</MudTd>
-                    <MudTd>@context.Position</MudTd>
-                    <MudTd>@context.Description</MudTd>
-                    <MudTd>@context.StartDate?.ToShortDateString()</MudTd>
-                    <MudTd>@context.EndDate?.ToShortDateString()</MudTd>
-                    <MudTd>@context.Wage.ToString("F2")</MudTd>
-                    <MudTd>
-                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary"
-                                       OnClick="@(() => EditContract(context.Id))" />
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
-                                       OnClick="@(() => DeleteContract(context.Id))" />
-                    </MudTd>
-                </RowTemplate>
-            <PagerContent>
-                <MudTablePager />
-            </PagerContent>
-            </MudTable>
+            <select @bind="filter.pageSize" class="form-select w-auto">
+                <option value=1>1</option>
+                @for (int @i = 1; @i <= 4; @i++)
+                {
+                    <option value=@(i * 5)>@(i * 5)</option>
+                }
+            </select>
+
+            <MudButton OnClick="getUpdatedList" Variant="Variant.Filled" Color="Color.Primary" Class="ms-2">Filter</MudButton>
+        </div>
+        <MudTable Items="@companyContracts" Style="cursor:default" Hover="true" Class="mud-table-bordered">
+            <HeaderContent>
+                <MudTh>Name</MudTh>
+                <MudTh>Position</MudTh>
+                <MudTh>Description</MudTh>
+                <MudTh>Start Date</MudTh>
+                <MudTh>End Date</MudTh>
+                <MudTh>Wage</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+
+            <RowTemplate>
+                <MudTd>@context.User.FirstName @context.User.LastName</MudTd>
+                <MudTd>@context.Position</MudTd>
+                <MudTd>@context.Description</MudTd>
+                <MudTd>@context.StartDate?.ToShortDateString()</MudTd>
+                <MudTd>@context.EndDate?.ToShortDateString()</MudTd>
+                <MudTd>@context.Wage.ToString("F2")</MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary"
+                                   OnClick="@(() => EditContract(context.Id))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
+                                   OnClick="@(() => DeleteContract(context.Id))" />
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+
+        <MudButton OnClick="decrease" Disabled="@(!filterContractDto.hasPreviousPage)">Previous</MudButton>
+        <MudButton OnClick="increase" Disabled="@(!filterContractDto.hasNextPage)">Next</MudButton>
     </div>
 }
 else
@@ -105,30 +117,19 @@ else
 @code {
     // --- State ---
     private Companies company;
+    private FilterContractDto filterContractDto = new();
     private List<ContractDto> companyContracts = new();
-    private string searchString = "";
-    private string selectedStatus = "All";
     private readonly string[] statuses = new[] { "All", "Active", "Finished", "NotStartedYet" };
     private bool firstRender = true;
     private int? adminId;
+    private UserFilter filter = new UserFilter
+    {
+        searchKey = "",
+        contractStatus = "All",
+        pageNumber = 1,
+        pageSize = 1
+    };
 
-
-    // --- Computed Property for Filtering ---
-    private IEnumerable<ContractDto> FilteredContracts =>
-        companyContracts.Where(c =>
-            (string.IsNullOrWhiteSpace(searchString) ||
-             c.Position.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
-             c.Description.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
-             c.User.FirstName.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
-             c.User.LastName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
-            &&
-            (selectedStatus == "All" ||
-             (selectedStatus == "Active" && c.StartDate <= DateTime.Today && c.EndDate >= DateTime.Today) ||
-             (selectedStatus == "Finished" && c.EndDate < DateTime.Today) ||
-             (selectedStatus == "NotStartedYet" && c.StartDate > DateTime.Today))
-        );
-
-    // --- Lifecycle ---
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
@@ -141,7 +142,7 @@ else
             return;
         }
 
-        await LoadCompanies();
+        await UpdateList();
     }
 
     // --- Data Loading ---
@@ -162,8 +163,12 @@ else
         var companies = await Http.GetFromJsonAsync<List<Companies>>($"/api/companies/admin/{adminId}");
         if (companies.Count > 0)
         {
+            Console.WriteLine(filter.contractStatus);
             company = companies.FirstOrDefault();
-            var contracts = await Http.GetFromJsonAsync<List<ContractDto>>($"/api/contracts/company/{company.Id}");
+            var query = $"?status={filter.contractStatus}&pageNumber={filter.pageNumber}&pageSize={filter.pageSize}&searchKey={filter.searchKey}";
+            var url = $"/api/contracts/company/{company.Id}{query}";
+            var filterContractDto = await Http.GetFromJsonAsync<FilterContractDto>($"/api/contracts/company/{company.Id}{query}");
+            var contracts = filterContractDto.contracts;
             if (contracts != null)
                 companyContracts = contracts;
         }
@@ -205,5 +210,58 @@ else
     private void EditContract(int id)
     {
         Nav.NavigateTo($"/editcontract/{id}");
+    }
+
+    private async Task UpdateList()
+    {
+        Console.WriteLine(filter.contractStatus);
+        var id = await ClientJwtService.GetAdminIdFromJwtAsync();
+        if (!id.HasValue)
+            return;
+
+        adminId = id;
+
+        // Add Authorization header
+        var jwt = await ClientJwtService.GetTokenAsync();
+        Http.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwt);
+
+        // Call API
+        var companies = await Http.GetFromJsonAsync<List<Companies>>($"/api/companies/admin/{adminId}");
+        if (companies.Count > 0)
+        {
+            company = companies.FirstOrDefault();
+            var query = $"?status={filter.contractStatus}&pageNumber={filter.pageNumber}&pageSize={filter.pageSize}&searchKey={filter.searchKey}";
+            var url = $"/api/contracts/company/{company.Id}{query}";
+            filterContractDto = await Http.GetFromJsonAsync<FilterContractDto>($"/api/contracts/company/{company.Id}{query}");
+
+            var contracts = filterContractDto.contracts;
+            if (contracts != null)
+                companyContracts = contracts;
+        }
+        else
+        {
+            company = new();
+            company.CompanyName = "";
+        }
+        StateHasChanged();
+
+    }
+    private async Task increase()
+    {
+        filter.pageNumber++;
+        await UpdateList();
+    }
+
+    private async Task decrease()
+    {
+        filter.pageNumber--;
+        await UpdateList();
+    }
+
+    private async Task getUpdatedList()
+    {
+        filter.pageNumber = 1;
+        await UpdateList();
     }
 }

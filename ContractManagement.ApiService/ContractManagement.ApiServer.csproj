@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ContractManagement.BL\ContractManagement.BL.csproj" />
+    <ProjectReference Include="..\ContractManagement.Database\ContractManagement.Database.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,7 +1,6 @@
 ﻿using ContractManagement.BL.Interfaces;
-using ContractManagement.Database.Interfaces;
 using ContractManagement.Model.DTO;
-using ContractManagement.Model.Entities;
+using ContractManagement.BL.Entities;
 
 namespace ContractManagement.BL.Services
 {

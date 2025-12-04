@@ -1,6 +1,7 @@
-﻿using ContractManagement.Database.Interfaces;
+﻿using ContractManagement.BL.Entities;
+using ContractManagement.BL.Interfaces;
 using ContractManagement.Model.DTO;
-using ContractManagement.Model.Entities;
+using ContractManagement.Model.Models;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using System;
@@ -112,6 +113,94 @@ namespace ContractManagement.Database.Repositories
                 list.Add(contract);
             }
             return list;
+        }
+
+        public async Task<FilterContractDto> GetAllCompanyContracts(int companyId, UserFilter filter)
+        {
+            // sanity check
+            if (filter.pageNumber <= 0)
+                filter.pageNumber = 1;
+            string[] statuses = new[] { "All", "Active", "Finished", "NotStartedYet" };
+
+            Console.WriteLine(filter.contractStatus);
+
+            if (!statuses.Contains(filter.contractStatus))
+                filter.contractStatus = "All";
+            if (filter.pageSize <= 0)
+                filter.pageSize = 10;
+            var list = new List<ContractDto>();
+            using var conn = new SqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            var cmd = new SqlCommand(
+              @"SELECT c.Id, c.CompanyId, c.Position, c.Description, c.StartDate, c.EndDate, c.Wage,
+                 u.FirstName, u.LastName
+          FROM Contracts c
+          INNER JOIN Users u ON c.UserId = u.Id
+          WHERE c.CompanyId = @companyId
+          AND
+          (
+                @searchString IS NULL
+                OR LTRIM(RTRIM(@searchString)) = ''
+                OR c.Position LIKE '%' + @searchString + '%'
+                OR c.Description LIKE '%' + @searchString + '%'
+                OR u.FirstName LIKE '%' + @searchString + '%'
+                OR u.LastName LIKE '%' + @searchString + '%'
+          )
+          AND
+          (
+                @selectedStatus = 'All'
+                OR (@selectedStatus = 'Active' AND c.StartDate <= CAST(GETDATE() AS DATE) AND c.EndDate >= CAST(GETDATE() AS DATE))
+                OR (@selectedStatus = 'Finished' AND c.EndDate < CAST(GETDATE() AS DATE))
+                OR (@selectedStatus = 'NotStartedYet' AND c.StartDate > CAST(GETDATE() AS DATE))
+          )
+          ORDER BY c.Id
+          OFFSET @startingFrom ROWS
+          FETCH NEXT @count ROWS ONLY
+          ",
+              conn);
+
+            cmd.Parameters.AddWithValue("@companyId", companyId);
+            cmd.Parameters.AddWithValue("@startingFrom", (filter.pageNumber - 1) * filter.pageSize);
+            cmd.Parameters.AddWithValue("@count", filter.pageSize);
+            cmd.Parameters.AddWithValue("@searchString", (object?)filter.searchKey ?? DBNull.Value);
+            Console.WriteLine(filter.contractStatus);
+            cmd.Parameters.AddWithValue("@selectedStatus", filter.contractStatus);
+
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                ContractDto contract = new ContractDto
+                {
+                    Id = reader.GetInt32(0),
+                    Position = reader.GetString(2),
+                    Description = reader.GetString(3),
+                    StartDate = reader.GetDateTime(4),
+                    EndDate = reader.GetDateTime(5),
+                    Wage = reader.GetDecimal(6),
+                    User = new UserDto
+                    {
+                        FirstName = reader.GetString(7),
+                        LastName = reader.GetString(8),
+                    }
+                };
+
+                list.Add(contract);
+            }
+
+            cmd = new SqlCommand(@"SELECT COUNT(*) 
+                        FROM Contracts c
+                        INNER JOIN Users u ON c.UserId = u.Id
+                        WHERE c.CompanyId = @companyId;", conn);
+            cmd.Parameters.AddWithValue("@companyId", companyId);
+            int totalCount = (int)await cmd.ExecuteScalarAsync();
+            FilterContractDto c = new FilterContractDto
+            {
+                hasNextPage = totalCount > filter.pageSize * filter.pageNumber,
+                hasPreviousPage = filter.pageNumber > 1,
+                contracts = list
+            };
+            return c;
         }
         public async Task<bool> InsertContractAsync(Contracts contract)
         {

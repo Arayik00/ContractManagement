@@ -1,9 +1,9 @@
-﻿using ContractManagement.Model.Entities;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ContractManagement.BL.Entities;
 
 namespace ContractManagement.BL.Interfaces
 {

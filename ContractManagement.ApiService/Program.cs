@@ -1,7 +1,7 @@
 using ContractManagement.BL.Interfaces;
 using ContractManagement.BL.Services;
-using ContractManagement.Database.Interfaces;
 using ContractManagement.Database.Repositories;
+
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
