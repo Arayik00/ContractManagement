@@ -198,8 +198,11 @@ namespace ContractManagement.Database.Repositories
             {
                 hasNextPage = totalCount > filter.pageSize * filter.pageNumber,
                 hasPreviousPage = filter.pageNumber > 1,
+                totalCount = totalCount,
+                totalPages = (int)Math.Ceiling((double)totalCount / filter.pageSize),
                 contracts = list
             };
+
             return c;
         }
         public async Task<bool> InsertContractAsync(Contracts contract)

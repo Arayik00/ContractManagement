@@ -9,9 +9,8 @@ namespace ContractManagement.Model.Models
     public class UserFilter
     {
         public string? searchKey { set; get; } = "";
-        public int pageNumber { set; get; } = 1;
-        public int pageSize { set; get; } = 5;
-
-        public string contractStatus { set; get; } = "all";
+        public int pageNumber { set; get; }
+        public int pageSize { set; get; }
+        public string contractStatus { set; get; } = "All";
     }
 }

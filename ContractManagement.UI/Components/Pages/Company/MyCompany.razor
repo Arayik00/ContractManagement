@@ -105,6 +105,16 @@ else if (company != null && company.CompanyName != "")
         </MudTable>
 
         <MudButton OnClick="decrease" Disabled="@(!filterContractDto.hasPreviousPage)">Previous</MudButton>
+        <MudButtonGroup Color="Color.Primary" Variant="Variant.Filled">
+
+            @foreach (var j in Enumerable.Range(1, filterContractDto.totalPages))
+            {
+                <MudButton OnClick="@(() => { filter.pageNumber = j; UpdateList(); })"
+                           Color="@(filter.pageNumber == j ? Color.Primary : Color.Default)">
+                    @j
+                </MudButton>
+            }
+        </MudButtonGroup>
         <MudButton OnClick="increase" Disabled="@(!filterContractDto.hasNextPage)">Next</MudButton>
     </div>
 }
@@ -145,43 +155,6 @@ else
         await UpdateList();
     }
 
-    // --- Data Loading ---
-    private async Task LoadCompanies()
-    {
-        var id = await ClientJwtService.GetAdminIdFromJwtAsync();
-        if (!id.HasValue)
-            return;
-
-        adminId = id;
-
-        // Add Authorization header
-        var jwt = await ClientJwtService.GetTokenAsync();
-        Http.DefaultRequestHeaders.Authorization =
-            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwt);
-
-        // Call API
-        var companies = await Http.GetFromJsonAsync<List<Companies>>($"/api/companies/admin/{adminId}");
-        if (companies.Count > 0)
-        {
-            Console.WriteLine(filter.contractStatus);
-            company = companies.FirstOrDefault();
-            var query = $"?status={filter.contractStatus}&pageNumber={filter.pageNumber}&pageSize={filter.pageSize}&searchKey={filter.searchKey}";
-            var url = $"/api/contracts/company/{company.Id}{query}";
-            var filterContractDto = await Http.GetFromJsonAsync<FilterContractDto>($"/api/contracts/company/{company.Id}{query}");
-            var contracts = filterContractDto.contracts;
-            if (contracts != null)
-                companyContracts = contracts;
-        }
-        else
-        {
-            company = new();
-            company.CompanyName = "";
-        }
-        StateHasChanged();
-
-    }
-
-
     // --- Actions ---
     private async Task DeleteContract(int contractId)
     {
@@ -199,7 +172,7 @@ else
 
         if (response.IsSuccessStatusCode)
         {
-            await LoadCompanies();
+            await UpdateList();
         }
         else
         {
@@ -230,8 +203,11 @@ else
         var companies = await Http.GetFromJsonAsync<List<Companies>>($"/api/companies/admin/{adminId}");
         if (companies.Count > 0)
         {
+            Console.WriteLine(filter.contractStatus);
+
             company = companies.FirstOrDefault();
-            var query = $"?status={filter.contractStatus}&pageNumber={filter.pageNumber}&pageSize={filter.pageSize}&searchKey={filter.searchKey}";
+            var query = $"?contractStatus={filter.contractStatus}&pageNumber={filter.pageNumber}&pageSize={filter.pageSize}&searchKey={filter.searchKey}";
+            Console.WriteLine(query);
             var url = $"/api/contracts/company/{company.Id}{query}";
             filterContractDto = await Http.GetFromJsonAsync<FilterContractDto>($"/api/contracts/company/{company.Id}{query}");
 

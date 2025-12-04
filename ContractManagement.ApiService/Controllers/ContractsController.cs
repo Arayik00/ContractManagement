@@ -62,8 +62,6 @@ namespace ContractManagement.ApiServer.Controllers
         [HttpGet("company/{companyId:int}")]
         public async Task<IActionResult> GetAllCompanyContracts(int companyId, [FromQuery] UserFilter filter)
         {
-            Console.WriteLine(filter.contractStatus);
-
             var contracts = await _contractService.GetAllCompanyContracts(companyId, filter);
             return Ok(contracts);
         }

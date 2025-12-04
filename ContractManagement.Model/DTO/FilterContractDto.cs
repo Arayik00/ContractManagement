@@ -10,7 +10,8 @@ namespace ContractManagement.Model.DTO
     {
         public bool hasNextPage { set; get; }
         public bool hasPreviousPage { set; get; }
-
+        public int totalCount { set; get; }
+        public int totalPages { set; get; }
         public List<ContractDto> contracts { set; get; }
     }
 }
